@@ -77,10 +77,10 @@ const port = 3000;
 app.use(bodyParser.json());
 
 // Route handler
-app.use('retail', (req, res, next) => {
+app.use('/retail', (req, res, next) => {
   apiBackendRetail.handleRequest(req, req, res).catch(next);
 });
-app.use('mobility', (req, res, next) => {
+app.use('/mobility', (req, res, next) => {
   apiBackendMobility.handleRequest(req, req, res).catch(next);
 });
 
