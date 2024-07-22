@@ -12,6 +12,7 @@ paths:
   /search:
     post:
       description: Search for services by intent
+      operationId: search
       tags:
         - Beckn Provider Platform (BPP)
         - Beckn Gateway (BG)
@@ -144,6 +145,7 @@ paths:
           description: Acknowledgement of message received
   /select:
     post:
+      operationId: select
       description: Select items from the catalog and build your order
       tags:
         - Beckn Provider Platform (BPP)
@@ -364,6 +366,7 @@ paths:
           description: Acknowledgement of message received
   /init:
     post:
+      operationId: init
       description: Initialize an order by providing billing and/or shipping details
       requestBody:
         content:
@@ -610,6 +613,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /confirm:
     post:
+      operationId: confirm
       description: Initialize an order by providing billing and/or shipping details
       requestBody:
         content:
@@ -838,6 +842,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /status:
     post:
+      operationId: status
       description: Fetch the latest order object
       requestBody:
         content:
@@ -934,6 +939,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /update:
     post:
+      operationId: update
       description: Remove object
       requestBody:
         content:
@@ -1012,6 +1018,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /rating:
     post:
+      operationId: rating
       description: Provide feedback on a service
       requestBody:
         content:
@@ -1108,6 +1115,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /support:
     post:
+      operationId: support
       description: Contact support
       requestBody:
         content:
@@ -1189,6 +1197,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /track:
     post:
+      operationId: track
       description: Track an active order
       requestBody:
         content:
@@ -1269,6 +1278,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /cancel:
     post:
+      operationId: cancel
       description: Cancel an order
       requestBody:
         content:
@@ -1393,6 +1403,7 @@ paths:
         - Beckn Provider Platform (BPP)
   /on_search:
     post:
+      operationId: on_search
       description: Send catalog
       requestBody:
         content:
@@ -2166,6 +2177,7 @@ paths:
         - Beckn Gateway (BG)
   /on_select:
     post:
+      operationId: on_select
       description: Send draft order object with quoted price for selected items
       requestBody:
         content:
@@ -2446,6 +2458,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_init:
     post:
+      operationId: on_init
       description: Send order object with payment details updated
       requestBody:
         content:
@@ -2959,6 +2972,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_confirm:
     post:
+      operationId: on_confirm
       description: Send active order object
       requestBody:
         content:
@@ -3486,6 +3500,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_status:
     post:
+      operationId: on_status
       description: Fetch the status of a Service
       requestBody:
         content:
@@ -4585,6 +4600,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_update:
     post:
+      operationId: on_update
       description: Returns updated service with updated runtime object
       requestBody:
         content:
@@ -5045,6 +5061,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_rating:
     post:
+      operationId: on_rating
       description: Provide feedback on a service
       requestBody:
         content:
@@ -5141,6 +5158,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_support:
     post:
+      operationId: on_support
       description: Contact Support
       requestBody:
         content:
@@ -5236,6 +5254,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_track:
     post:
+      operationId: on_track
       description: Send tracking details of an active order
       requestBody:
         content:
@@ -5333,6 +5352,7 @@ paths:
         - Beckn App Platform (BAP)
   /on_cancel:
     post:
+      operationId: on_cancel
       description: Send cancellation request_id with reasons list in case of cancellation request. Else send cancelled order object
       requestBody:
         content:
