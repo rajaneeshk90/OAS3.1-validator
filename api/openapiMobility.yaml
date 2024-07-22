@@ -6122,8 +6122,6 @@ components:
           allOf:
             - description: 'A globally unique identifier of the platform, Typically it is the fully qualified domain name (FQDN) of the platform.'
               type: string
-            - not:
-                format: uri
           description: Subscriber ID of the BAP
         bap_uri:
           allOf:
