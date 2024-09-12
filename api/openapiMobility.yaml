@@ -26,10 +26,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - search
                     message:
                       properties:
                         intent:
@@ -40,28 +36,192 @@ paths:
                     - message
                 - allOf:
                     - properties:
+                        context:
+                          properties:
+                            location:
+                              properties:
+                                city:
+                                  properties:
+                                    code:
+                                      type: string
+                                  required:
+                                    - code
+                                country:
+                                  properties:
+                                    code:
+                                      type: string
+                                      enum:
+                                        - IND
+                                  required:
+                                    - code
+                            bap_id:
+                              type: string
+                              pattern: '^(?!https?://).*$'
+                            bpp_id:
+                              type: string
+                              pattern: '^(?!https?://).*$'
+                            ttl:
+                              type: string
+                              format: date-time
+                            timestamp:
+                              type: string
+                              format: date-time
+                          required:
+                            - location
+                            - domain
+                            - action
+                            - message_id
+                            - transaction_id
+                            - timestamp
+                            - bap_id
+                            - bap_uri
+                            - ttl
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - search
+                    - properties:
+                        message:
+                          properties:
+                            intent:
+                              properties:
+                                tags:
+                                  items:
+                                    properties:
+                                      list:
+                                        items:
+                                          properties:
+                                            value:
+                                              type: string
+                                              enum:
+                                                - START
+                                                - STOP
+                                payment:
+                                  properties:
+                                    collected_by:
+                                      type: string
+                                      enum:
+                                        - BPP
+                                        - BAP
+                                  required:
+                                    - collected_by
+                              required:
+                                - payment
+                                - tags
+                          required:
+                            - intent
+                    - properties:
+                        message:
+                          properties:
+                            intent:
+                              properties:
+                                payment:
+                                  properties:
+                                    tags:
+                                      items:
+                                        if:
+                                          properties:
+                                            descriptor:
+                                              properties:
+                                                code:
+                                                  const: SETTLEMENT_TERMS
+                                        then:
+                                          properties:
+                                            list:
+                                              allOf:
+                                                - contains:
+                                                    type: object
+                                                    properties:
+                                                      descriptor:
+                                                        type: object
+                                                        properties:
+                                                          code:
+                                                            const: STATIC_TERMS
+                                                        required:
+                                                          - code
+                                                      value:
+                                                        type: string
+                                                        format: uri
+                                                    required:
+                                                      - descriptor
+                                                      - value
+                                                - contains:
+                                                    type: object
+                                                    properties:
+                                                      descriptor:
+                                                        type: object
+                                                        properties:
+                                                          code:
+                                                            const: SETTLEMENT_TYPE
+                                                        required:
+                                                          - code
+                                                      value:
+                                                        type: string
+                                                        enum:
+                                                          - upi
+                                                          - neft
+                                                          - rtgs
+                                                    required:
+                                                      - descriptor
+                                                      - value
+                                                - contains:
+                                                    type: object
+                                                    properties:
+                                                      descriptor:
+                                                        type: object
+                                                        properties:
+                                                          code:
+                                                            const: SETTLEMENT_WINDOW
+                                                        required:
+                                                          - code
+                                                      value:
+                                                        type: string
+                                                        pattern: '^PT\d+[MH]$'
+                                                    required:
+                                                      - descriptor
+                                                      - value
+                    - properties:
                         message:
                           properties:
                             intent:
                               properties:
                                 fulfillment:
-                                  type: object
                                   properties:
                                     stops:
-                                      type: array
-                                      minItems: 2
-                                      items:
-                                        type: object
-                                        properties:
-                                          location:
+                                      allOf:
+                                        - contains:
                                             type: object
                                             properties:
-                                              gps:
-                                                type: string
+                                              location:
+                                                type: object
+                                                properties:
+                                                  gps:
+                                                    type: string
+                                                required:
+                                                  - gps
+                                              type:
+                                                const: START
                                             required:
-                                              - gps
-                                        required:
-                                          - location
+                                              - location
+                                              - type
+                                        - contains:
+                                            type: object
+                                            properties:
+                                              location:
+                                                type: object
+                                                properties:
+                                                  gps:
+                                                    type: string
+                                                required:
+                                                  - gps
+                                              type:
+                                                const: END
+                                            required:
+                                              - location
+                                              - type
                                   required:
                                     - stops
                               required:
@@ -145,8 +305,8 @@ paths:
           description: Acknowledgement of message received
   /select:
     post:
-      operationId: select
       description: Select items from the catalog and build your order
+      operationId: select
       tags:
         - Beckn Provider Platform (BPP)
       requestBody:
@@ -159,10 +319,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - select
                     message:
                       properties:
                         order:
@@ -175,7 +331,14 @@ paths:
                     - context
                     - message
                 - allOf:
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - select
                     - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
             examples:
               Get a quote for a fare product selected from a public transit catalog:
@@ -366,8 +529,8 @@ paths:
           description: Acknowledgement of message received
   /init:
     post:
-      operationId: init
       description: Initialize an order by providing billing and/or shipping details
+      operationId: init
       requestBody:
         content:
           application/json:
@@ -378,10 +541,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - init
                     message:
                       properties:
                         order:
@@ -393,25 +552,20 @@ paths:
                     - context
                     - message
                 - allOf:
-                    - properties:
-                        message:
-                          properties:
-                            order:
-                              properties:
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                      enum:
-                                        - PRE-ORDER
-                                        - PRE-FULFILLMENT
-                                        - ON-FULFILLMENT
-                                        - POST-FULFILLMENT
-                                  required:
-                                    - type
+                    - allOf:
+                        - $ref: '#/paths/~1search/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                        - properties:
+                            context:
                               required:
-                                - payment
+                                - bpp_id
+                                - bpp_uri
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - init
                     - properties:
                         message:
                           properties:
@@ -437,63 +591,87 @@ paths:
                               required:
                                 - provider
                                 - items
-                              not:
-                                properties:
-                                  id:
-                                    type: string
+                    - allOf:
+                        - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
+                        - $ref: '#/paths/~1on_select/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  required:
+                                    - fulfillments
+                    - allOf:
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    payments:
+                                      type: array
+                                      items:
+                                        type: object
+                                        properties:
+                                          type:
+                                            type: string
+                                            enum:
+                                              - PRE-ORDER
+                                              - ON-FULFILLMENT
+                                              - POST-FULFILLMENT
+                                          status:
+                                            type: string
+                                            enum:
+                                              - PAID
+                                              - NOT-PAID
+                                          collected_by:
+                                            type: string
+                                            enum:
+                                              - BAP
+                                              - BPP
+                                          params:
+                                            type: object
+                                            properties:
+                                              amount:
+                                                type: string
+                                                pattern: '^\d+(\.\d{1,2})?$'
+                                              currency:
+                                                type: string
+                                        required:
+                                          - type
+                                          - status
+                                          - collected_by
+                                          - params
+                                  required:
+                                    - payments
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    payments:
+                                      items:
+                                        properties:
+                                          params:
+                                            required:
+                                              - bank_code
+                                              - bank_account_number
+                                              - virtual_payment_address
+                                        required:
+                                          - type
+                                          - status
+                                          - collected_by
+                                          - params
+                                  required:
+                                    - payments
                     - properties:
                         message:
                           properties:
                             order:
                               properties:
-                                fulfillments:
-                                  type: array
-                                  minItems: 1
-                                  items:
-                                    type: object
-                                    properties:
-                                      stops:
-                                        type: array
-                                        minItems: 2
-                                        items:
-                                          type: object
-                                          properties:
-                                            location:
-                                              type: object
-                                              properties:
-                                                gps:
-                                                  type: string
-                                              required:
-                                                - gps
-                                            type:
-                                              type: string
-                                              enum:
-                                                - START
-                                                - END
-                                          required:
-                                            - location
-                                            - type
-                                      state:
-                                        type: object
-                                        properties:
-                                          descriptor:
-                                            type: object
-                                            properties:
-                                              code:
-                                                type: string
-                                                enum:
-                                                  - DRIVER_EN_ROUTE_TO_PICKUP
-                                                  - DRIVER_AT_PICKUP
-                                                  - RIDE_STARTED
-                                                  - RIDE_ENDED
-                                                  - RIDE_CANCELLED
-                                                  - PAYMENT_COLLECTED
-                                            required:
-                                              - code
-                                    required:
-                                      - stops
+                                billing:
+                                  required:
+                                    - name
                               required:
-                                - fulfillments
+                                - billing
             examples:
               Initialize draft order and request for terms of service:
                 value:
@@ -613,8 +791,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /confirm:
     post:
-      operationId: confirm
       description: Initialize an order by providing billing and/or shipping details
+      operationId: confirm
       requestBody:
         content:
           application/json:
@@ -624,10 +802,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - confirm
                     message:
                       properties:
                         order:
@@ -641,66 +815,747 @@ paths:
                     - message
                   type: object
                 - allOf:
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - confirm
                     - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - allOf:
+                        - $ref: '#/paths/~1on_select/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      items:
+                                        allOf:
+                                          - properties:
+                                              customer:
+                                                properties:
+                                                  contact:
+                                                    properties:
+                                                      phone:
+                                                        type: string
+                                                        pattern: '^\+?[1-9]\d{1,14}$'
+                                                    required:
+                                                      - phone
+                                                  person:
+                                                    properties:
+                                                      name:
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                required:
+                                                  - contact
+                                                  - person
+                                            required:
+                                              - customer
+                    - allOf:
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    items:
+                                      type: array
+                                      minItems: 1
+                                      items:
+                                        type: object
+                                        properties:
+                                          id:
+                                            type: string
+                                          descriptor:
+                                            type: object
+                                            properties:
+                                              name:
+                                                type: string
+                                              code:
+                                                type: string
+                                                enum:
+                                                  - RIDE
+                                            required:
+                                              - code
+                                          price:
+                                            type: object
+                                            properties:
+                                              value:
+                                                type: string
+                                            required:
+                                              - value
+                                          fulfillment_ids:
+                                            minItems: 1
+                                          location_ids:
+                                            minItems: 1
+                                        required:
+                                          - id
+                                          - price
+                                          - descriptor
+                                  required:
+                                    - items
+                        - allOf:
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: FARE_POLICY
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        type: array
+                                                        items:
+                                                          type: object
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  type: string
+                                                                  enum:
+                                                                    - MIN_FARE
+                                                                    - MIN_FARE_DISTANCE_KM
+                                                                    - PER_KM_CHARGE
+                                                                    - PICKUP_CHARGE
+                                                                    - WAITING_CHARGE_PER_MIN
+                                                                    - NIGHT_CHARGE_MULTIPLIER
+                                                                    - NIGHT_SHIFT_START_TIME
+                                                                    - NIGHT_SHIFT_END_TIME
+                                                                    - EXTERNAL_REF
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: FARE_POLICY
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        allOf:
+                                                          - contains:
+                                                              type: object
+                                                              properties:
+                                                                descriptor:
+                                                                  type: object
+                                                                  properties:
+                                                                    code:
+                                                                      const: MIN_FARE
+                                                                  required:
+                                                                    - code
+                                                                value:
+                                                                  type: string
+                                                              required:
+                                                                - descriptor
+                                                                - value
+                                                          - contains:
+                                                              type: object
+                                                              properties:
+                                                                descriptor:
+                                                                  type: object
+                                                                  properties:
+                                                                    code:
+                                                                      const: MIN_FARE_DISTANCE_KM
+                                                                  required:
+                                                                    - code
+                                                                value:
+                                                                  type: string
+                                                              required:
+                                                                - descriptor
+                                                                - value
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: FARE_POLICY
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        type: array
+                                                        items:
+                                                          allOf:
+                                                            - if:
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        enum:
+                                                                          - MIN_FARE
+                                                                          - MIN_FARE_DISTANCE_KM
+                                                                          - PER_KM_CHARGE
+                                                                          - PICKUP_CHARGE
+                                                                          - WAITING_CHARGE_PER_MIN
+                                                                          - NIGHT_CHARGE_MULTIPLIER
+                                                              then:
+                                                                properties:
+                                                                  value:
+                                                                    type: string
+                                                                    pattern: ^-?\d+(\.\d+)?$
+                                                                required:
+                                                                  - descriptor
+                                                                  - value
+                                                            - if:
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        enum:
+                                                                          - NIGHT_SHIFT_START_TIME
+                                                                          - NIGHT_SHIFT_END_TIME
+                                                              then:
+                                                                properties:
+                                                                  value:
+                                                                    type: string
+                                                                    pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$'
+                                                                required:
+                                                                  - descriptor
+                                                                  - value
+                                                            - if:
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        const: EXTERNAL_REF
+                                                              then:
+                                                                properties:
+                                                                  value:
+                                                                    type: string
+                                                                    pattern: '^https?://[^\s/$.?#].[^\s]*$'
+                                                                required:
+                                                                  - descriptor
+                                                                  - value
+                        - allOf:
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: INFO
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        type: array
+                                                        items:
+                                                          type: object
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  type: string
+                                                                  enum:
+                                                                    - DISTANCE_TO_NEAREST_DRIVER_METER
+                                                                    - ETA_TO_NEAREST_DRIVER_MIN
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: INFO
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        allOf:
+                                                          - contains:
+                                                              type: object
+                                                              properties:
+                                                                descriptor:
+                                                                  type: object
+                                                                  properties:
+                                                                    code:
+                                                                      const: ETA_TO_NEAREST_DRIVER_MIN
+                                                                  required:
+                                                                    - code
+                                                                value:
+                                                                  type: string
+                                                                  pattern: ^-?\d+(\.\d+)?$
+                                                              required:
+                                                                - descriptor
+                                                                - value
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        items:
+                                          type: array
+                                          items:
+                                            properties:
+                                              tags:
+                                                items:
+                                                  if:
+                                                    properties:
+                                                      descriptor:
+                                                        properties:
+                                                          code:
+                                                            const: INFO
+                                                  then:
+                                                    properties:
+                                                      list:
+                                                        type: array
+                                                        items:
+                                                          allOf:
+                                                            - if:
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        enum:
+                                                                          - DISTANCE_TO_NEAREST_DRIVER_METER
+                                                                          - ETA_TO_NEAREST_DRIVER_MIN
+                                                              then:
+                                                                properties:
+                                                                  value:
+                                                                    type: string
+                                                                    pattern: ^-?\d+(\.\d+)?$
+                                                                required:
+                                                                  - descriptor
+                                                                  - value
+                    - allOf:
+                        - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                        - allOf:
+                            - allOf:
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: BUYER_FINDER_FEES
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            type: array
+                                                            items:
+                                                              type: object
+                                                              properties:
+                                                                descriptor:
+                                                                  properties:
+                                                                    code:
+                                                                      type: string
+                                                                      enum:
+                                                                        - BUYER_FINDER_FEES_PERCENTAGE
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: BUYER_FINDER_FEES
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            allOf:
+                                                              - contains:
+                                                                  type: object
+                                                                  properties:
+                                                                    descriptor:
+                                                                      type: object
+                                                                      properties:
+                                                                        code:
+                                                                          const: BUYER_FINDER_FEES_PERCENTAGE
+                                                                      required:
+                                                                        - code
+                                                                    value:
+                                                                      type: string
+                                                                  required:
+                                                                    - descriptor
+                                                                    - value
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: BUYER_FINDER_FEES
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            type: array
+                                                            items:
+                                                              allOf:
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            enum:
+                                                                              - BUYER_FINDER_FEES_PERCENTAGE
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        pattern: ^-?\d+(\.\d+)?$
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                            - allOf:
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: SETTLEMENT_TERMS
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            type: array
+                                                            items:
+                                                              type: object
+                                                              properties:
+                                                                descriptor:
+                                                                  properties:
+                                                                    code:
+                                                                      type: string
+                                                                      enum:
+                                                                        - SETTLEMENT_WINDOW
+                                                                        - SETTLEMENT_BASIS
+                                                                        - SETTLEMENT_TYPE
+                                                                        - MANDATORY_ARBITRATION
+                                                                        - COURT_JURISDICTION
+                                                                        - DELAY_INTEREST
+                                                                        - STATIC_TERMS
+                                                                        - SETTLEMENT_AMOUNT
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: SETTLEMENT_TERMS
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            allOf:
+                                                              - contains:
+                                                                  type: object
+                                                                  properties:
+                                                                    descriptor:
+                                                                      type: object
+                                                                      properties:
+                                                                        code:
+                                                                          const: STATIC_TERMS
+                                                                      required:
+                                                                        - code
+                                                                    value:
+                                                                      type: string
+                                                                  required:
+                                                                    - descriptor
+                                                                    - value
+                                                              - contains:
+                                                                  type: object
+                                                                  properties:
+                                                                    descriptor:
+                                                                      type: object
+                                                                      properties:
+                                                                        code:
+                                                                          const: SETTLEMENT_TYPE
+                                                                      required:
+                                                                        - code
+                                                                    value:
+                                                                      type: string
+                                                                  required:
+                                                                    - descriptor
+                                                                    - value
+                                                              - contains:
+                                                                  type: object
+                                                                  properties:
+                                                                    descriptor:
+                                                                      type: object
+                                                                      properties:
+                                                                        code:
+                                                                          const: SETTLEMENT_WINDOW
+                                                                      required:
+                                                                        - code
+                                                                    value:
+                                                                      type: string
+                                                                  required:
+                                                                    - descriptor
+                                                                    - value
+                                - properties:
+                                    message:
+                                      properties:
+                                        order:
+                                          properties:
+                                            payments:
+                                              items:
+                                                properties:
+                                                  tags:
+                                                    items:
+                                                      if:
+                                                        properties:
+                                                          descriptor:
+                                                            properties:
+                                                              code:
+                                                                const: SETTLEMENT_TERMS
+                                                      then:
+                                                        properties:
+                                                          list:
+                                                            type: array
+                                                            items:
+                                                              allOf:
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_WINDOW
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        pattern: '^P(?!$)(?:\d+Y)?(?:\d+M)?(?:\d+W)?(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+S)?)?$'
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_BASIS
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        enum:
+                                                                          - INVOICE_RECEIPT
+                                                                          - DELIVERY
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: MANDATORY_ARBITRATION
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        pattern: ^(true|false)$
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: STATIC_TERMS
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        format: uri
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: COURT_JURISDICTION
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: DELAY_INTEREST
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        pattern: '^\d+(\.\d{1,2})?$'
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_TYPE
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        enum:
+                                                                          - UPI
+                                                                          - NEFT
+                                                                          - RTGS
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - if:
+                                                                    properties:
+                                                                      descriptor:
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_AMOUNT
+                                                                  then:
+                                                                    properties:
+                                                                      value:
+                                                                        type: string
+                                                                        pattern: '^\d+(\.\d{1,2})?$'
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                            - properties:
+                                message:
+                                  properties:
+                                    order:
+                                      properties:
+                                        payments:
+                                          items:
+                                            properties:
+                                              tags:
+                                                allOf:
+                                                  - contains:
+                                                      properties:
+                                                        descriptor:
+                                                          type: object
+                                                          properties:
+                                                            code:
+                                                              const: BUYER_FINDER_FEES
+                                                          required:
+                                                            - code
+                                                  - contains:
+                                                      properties:
+                                                        descriptor:
+                                                          type: object
+                                                          properties:
+                                                            code:
+                                                              const: SETTLEMENT_TERMS
+                                                          required:
+                                                            - code
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
                     - properties:
                         message:
                           properties:
                             order:
                               properties:
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                      enum:
-                                        - PRE-ORDER
-                                        - PRE-FULFILLMENT
-                                        - ON-FULFILLMENT
-                                        - POST-FULFILLMENT
-                                    status:
-                                      type: string
-                                      enum:
-                                        - PAID
-                                        - NOT-PAID
-                                    collected_by:
-                                      type: string
-                                      enum:
-                                        - DRIVER
-                                        - DRIVER_APP
-                                        - RIDER_APP
-                                    params:
-                                      type: object
-                                      properties:
-                                        amount:
-                                          type: number
-                                        currency:
-                                          type: string
-                                      required:
-                                        - amount
-                                        - currency
-                                  required:
-                                    - type
-                                    - status
-                              required:
-                                - payment
-                    - properties:
-                        message:
-                          properties:
-                            order:
-                              properties:
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                    params:
-                                      type: object
-                                      properties:
-                                        transaction_id:
-                                          type: string
-                                  required:
-                                    - type
+                                payments:
+                                  type: array
+                                  items:
+                                    properties:
+                                      type:
+                                        type: string
+                                      params:
+                                        type: object
+                                        properties:
+                                          transaction_id:
+                                            type: string
+                                    required:
+                                      - type
                                   allOf:
                                     - if:
                                         properties:
@@ -712,7 +1567,14 @@ paths:
                                             required:
                                               - transaction_id
                               required:
-                                - payment
+                                - payments
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              not:
+                                required:
+                                  - id
             examples:
               Confirm ride booking:
                 value:
@@ -842,8 +1704,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /status:
     post:
-      operationId: status
       description: Fetch the latest order object
+      operationId: status
       requestBody:
         content:
           application/json:
@@ -853,10 +1715,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - status
                     message:
                       properties:
                         order_id:
@@ -867,6 +1725,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - status
                     - properties:
                         message:
                           properties:
@@ -939,8 +1805,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /update:
     post:
-      operationId: update
       description: Remove object
+      operationId: update
       requestBody:
         content:
           application/json:
@@ -977,6 +1843,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - update
                     - properties:
                         message:
                           type: object
@@ -1018,8 +1892,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /rating:
     post:
-      operationId: rating
       description: Provide feedback on a service
+      operationId: rating
       requestBody:
         content:
           application/json:
@@ -1045,6 +1919,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - rating
                     - properties:
                         message:
                           properties:
@@ -1115,8 +1997,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /support:
     post:
-      operationId: support
       description: Contact support
+      operationId: support
       requestBody:
         content:
           application/json:
@@ -1140,6 +2022,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - support
                     - properties:
                         message:
                           properties:
@@ -1197,8 +2087,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /track:
     post:
-      operationId: track
       description: Track an active order
+      operationId: track
       requestBody:
         content:
           application/json:
@@ -1226,6 +2116,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - track
                     - properties:
                         message:
                           properties:
@@ -1278,8 +2176,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /cancel:
     post:
-      operationId: cancel
       description: Cancel an order
+      operationId: cancel
       requestBody:
         content:
           application/json:
@@ -1307,13 +2205,35 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - cancel
                     - properties:
                         message:
                           properties:
                             order_id:
                               type: string
+                            descriptor:
+                              properties:
+                                code:
+                                  type: string
+                                  enum:
+                                    - SOFT_CANCEL
+                                    - CONFIRM_CANCEL
+                              required:
+                                - code
+                              cancellation_reason_id:
+                                type: string
+                                pattern: '^[0-9]+$'
                           required:
                             - order_id
+                            - descriptor
+                            - cancellation_reason_id
             examples:
               Cancel a ride with selected reason:
                 value:
@@ -1403,8 +2323,8 @@ paths:
         - Beckn Provider Platform (BPP)
   /on_search:
     post:
-      operationId: on_search
       description: Send catalog
+      operationId: on_search
       requestBody:
         content:
           application/json:
@@ -1415,12 +2335,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - on_search
-                          required:
-                            - action
                     error:
                       $ref: '#/components/schemas/Error'
                     message:
@@ -1434,6 +2348,14 @@ paths:
                     - context
                     - message
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_search
                     - properties:
                         message:
                           properties:
@@ -1451,7 +2373,14 @@ paths:
                                         minItems: 1
                                   required:
                                     - name
-                                    - images
+                              required:
+                                - descriptor
+                    - properties:
+                        message:
+                          properties:
+                            catalog:
+                              type: object
+                              properties:
                                 providers:
                                   type: array
                                   minItems: 1
@@ -1460,22 +2389,50 @@ paths:
                                     properties:
                                       id:
                                         type: string
-                                      descriptor:
-                                        type: object
-                                        properties:
-                                          name:
-                                            type: string
-                                          images:
-                                            type: array
-                                            items:
-                                              minItems: 1
-                                        required:
-                                          - name
-                                          - images
+                                    required:
+                                      - id
+                              required:
+                                - providers
+                    - properties:
+                        message:
+                          properties:
+                            catalog:
+                              properties:
+                                providers:
+                                  items:
+                                    properties:
                                       fulfillments:
                                         type: array
+                                        minItems: 1
                                         items:
-                                          minItems: 1
+                                          properties:
+                                            vehicle:
+                                              properties:
+                                                category:
+                                                  type: string
+                                                  enum:
+                                                    - AUTO_RICKSHAW
+                                                    - CAB
+                                              required:
+                                                - category
+                                            type:
+                                              type: string
+                                              enum:
+                                                - DELIVERY
+                                          required:
+                                            - id
+                                            - vehicle
+                                            - type
+                                    required:
+                                      - fulfillments
+                    - properties:
+                        message:
+                          properties:
+                            catalog:
+                              properties:
+                                providers:
+                                  items:
+                                    properties:
                                       items:
                                         type: array
                                         minItems: 1
@@ -1487,15 +2444,43 @@ paths:
                                               properties:
                                                 name:
                                                   type: string
+                                                code:
+                                                  type: string
+                                                  enum:
+                                                    - RIDE
                                               required:
-                                                - name
+                                                - code
                                             price:
                                               type: object
                                               properties:
                                                 value:
-                                                  type: number
+                                                  type: string
+                                                  pattern: ^-?\d+(\.\d+)?$
                                               required:
                                                 - value
+                                                - currency
+                                            fulfillment_ids:
+                                              type: array
+                                              minItems: 1
+                                            payment_ids:
+                                              type: array
+                                              minItems: 1
+                                          required:
+                                            - id
+                                            - descriptor
+                                            - price
+                                            - fulfillment_ids
+                                            - payment_ids
+                                    required:
+                                      - items
+                    - properties:
+                        message:
+                          properties:
+                            catalog:
+                              properties:
+                                providers:
+                                  items:
+                                    properties:
                                       payments:
                                         type: array
                                         minItems: 1
@@ -1507,11 +2492,446 @@ paths:
                                             collected_by:
                                               type: string
                                           required:
-                                            - type
                                             - collected_by
-                              required:
-                                - descriptor
-                                - providers
+                                    required:
+                                      - payments
+                    - properties:
+                        message:
+                          properties:
+                            catalog:
+                              properties:
+                                providers:
+                                  items:
+                                    properties:
+                                      fulfillments:
+                                        items:
+                                          properties:
+                                            stops:
+                                              allOf:
+                                                - contains:
+                                                    type: object
+                                                    properties:
+                                                      location:
+                                                        type: object
+                                                        properties:
+                                                          gps:
+                                                            type: string
+                                                        required:
+                                                          - gps
+                                                      type:
+                                                        const: START
+                                                    required:
+                                                      - location
+                                                      - type
+                                                - contains:
+                                                    type: object
+                                                    properties:
+                                                      location:
+                                                        type: object
+                                                        properties:
+                                                          gps:
+                                                            type: string
+                                                        required:
+                                                          - gps
+                                                      type:
+                                                        const: END
+                                                    required:
+                                                      - location
+                                                      - type
+                                          required:
+                                            - stops
+                    - allOf:
+                        - allOf:
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: BUYER_FINDER_FEES
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              type: array
+                                                              items:
+                                                                type: object
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        type: string
+                                                                        enum:
+                                                                          - BUYER_FINDER_FEES_PERCENTAGE
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: BUYER_FINDER_FEES
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              allOf:
+                                                                - contains:
+                                                                    type: object
+                                                                    properties:
+                                                                      descriptor:
+                                                                        type: object
+                                                                        properties:
+                                                                          code:
+                                                                            const: BUYER_FINDER_FEES_PERCENTAGE
+                                                                        required:
+                                                                          - code
+                                                                      value:
+                                                                        type: string
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: BUYER_FINDER_FEES
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              type: array
+                                                              items:
+                                                                allOf:
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              enum:
+                                                                                - BUYER_FINDER_FEES_PERCENTAGE
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          pattern: ^-?\d+(\.\d+)?$
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                        - allOf:
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: SETTLEMENT_TERMS
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              type: array
+                                                              items:
+                                                                type: object
+                                                                properties:
+                                                                  descriptor:
+                                                                    properties:
+                                                                      code:
+                                                                        type: string
+                                                                        enum:
+                                                                          - SETTLEMENT_WINDOW
+                                                                          - SETTLEMENT_BASIS
+                                                                          - SETTLEMENT_TYPE
+                                                                          - MANDATORY_ARBITRATION
+                                                                          - COURT_JURISDICTION
+                                                                          - DELAY_INTEREST
+                                                                          - STATIC_TERMS
+                                                                          - SETTLEMENT_AMOUNT
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: SETTLEMENT_TERMS
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              allOf:
+                                                                - contains:
+                                                                    type: object
+                                                                    properties:
+                                                                      descriptor:
+                                                                        type: object
+                                                                        properties:
+                                                                          code:
+                                                                            const: STATIC_TERMS
+                                                                        required:
+                                                                          - code
+                                                                      value:
+                                                                        type: string
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - contains:
+                                                                    type: object
+                                                                    properties:
+                                                                      descriptor:
+                                                                        type: object
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_TYPE
+                                                                        required:
+                                                                          - code
+                                                                      value:
+                                                                        type: string
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                                                                - contains:
+                                                                    type: object
+                                                                    properties:
+                                                                      descriptor:
+                                                                        type: object
+                                                                        properties:
+                                                                          code:
+                                                                            const: SETTLEMENT_WINDOW
+                                                                        required:
+                                                                          - code
+                                                                      value:
+                                                                        type: string
+                                                                    required:
+                                                                      - descriptor
+                                                                      - value
+                            - properties:
+                                message:
+                                  properties:
+                                    catalog:
+                                      properties:
+                                        providers:
+                                          items:
+                                            properties:
+                                              payments:
+                                                items:
+                                                  properties:
+                                                    tags:
+                                                      items:
+                                                        if:
+                                                          properties:
+                                                            descriptor:
+                                                              properties:
+                                                                code:
+                                                                  const: SETTLEMENT_TERMS
+                                                        then:
+                                                          properties:
+                                                            list:
+                                                              type: array
+                                                              items:
+                                                                allOf:
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: SETTLEMENT_WINDOW
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          pattern: '^P(?!$)(?:\d+Y)?(?:\d+M)?(?:\d+W)?(?:\d+D)?(?:T(?=\d)(?:\d+H)?(?:\d+M)?(?:\d+S)?)?$'
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: SETTLEMENT_BASIS
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          enum:
+                                                                            - INVOICE_RECEIPT
+                                                                            - DELIVERY
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: MANDATORY_ARBITRATION
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          pattern: ^(true|false)$
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: STATIC_TERMS
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          format: uri
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: COURT_JURISDICTION
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: DELAY_INTEREST
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          pattern: '^\d+(\.\d{1,2})?$'
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: SETTLEMENT_TYPE
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          enum:
+                                                                            - UPI
+                                                                            - NEFT
+                                                                            - RTGS
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                                                                  - if:
+                                                                      properties:
+                                                                        descriptor:
+                                                                          properties:
+                                                                            code:
+                                                                              const: SETTLEMENT_AMOUNT
+                                                                    then:
+                                                                      properties:
+                                                                        value:
+                                                                          type: string
+                                                                          pattern: '^\d+(\.\d{1,2})?$'
+                                                                      required:
+                                                                        - descriptor
+                                                                        - value
+                        - properties:
+                            message:
+                              properties:
+                                catalog:
+                                  properties:
+                                    providers:
+                                      items:
+                                        properties:
+                                          payments:
+                                            items:
+                                              properties:
+                                                tags:
+                                                  allOf:
+                                                    - contains:
+                                                        properties:
+                                                          descriptor:
+                                                            type: object
+                                                            properties:
+                                                              code:
+                                                                const: BUYER_FINDER_FEES
+                                                            required:
+                                                              - code
+                                                    - contains:
+                                                        properties:
+                                                          descriptor:
+                                                            type: object
+                                                            properties:
+                                                              code:
+                                                                const: SETTLEMENT_TERMS
+                                                            required:
+                                                              - code
             examples:
               Return a mobility catalog with multiple providers:
                 value:
@@ -2177,8 +3597,8 @@ paths:
         - Beckn Gateway (BG)
   /on_select:
     post:
-      operationId: on_select
       description: Send draft order object with quoted price for selected items
+      operationId: on_select
       requestBody:
         content:
           application/json:
@@ -2189,10 +3609,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - on_select
                     error:
                       $ref: '#/components/schemas/Error'
                     message:
@@ -2207,10 +3623,163 @@ paths:
                     - context
                     - message
                 - allOf:
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_select
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - allOf:
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      minItems: 1
+                                      items:
+                                        required:
+                                          - id
+                                  required:
+                                    - fulfillments
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      minItems: 1
+                                      items:
+                                        type: object
+                                        properties:
+                                          state:
+                                            type: object
+                                            properties:
+                                              descriptor:
+                                                type: object
+                                                properties:
+                                                  code:
+                                                    type: string
+                                                    enum:
+                                                      - RIDE_ASSIGNED
+                                                      - RIDE_ENROUTE_PICKUP
+                                                      - RIDE_ARRIVED_PICKUP
+                                                      - RIDE_STARTED
+                                                      - RIDE_ENDED
+                                                      - RIDE_CANCELLED
+                                                required:
+                                                  - code
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      minItems: 1
+                                      items:
+                                        properties:
+                                          stops:
+                                            items:
+                                              properties:
+                                                authorization:
+                                                  type: object
+                                                  properties:
+                                                    type:
+                                                      type: string
+                                                      enum:
+                                                        - OTP
+                                                    token:
+                                                      type: string
+                                                      pattern: ^-?\d+(\.\d+)?$
+                                                  required:
+                                                    - type
+                                                    - token
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      items:
+                                        properties:
+                                          stops:
+                                            allOf:
+                                              - contains:
+                                                  type: object
+                                                  properties:
+                                                    location:
+                                                      type: object
+                                                      properties:
+                                                        gps:
+                                                          type: string
+                                                      required:
+                                                        - gps
+                                                    type:
+                                                      const: START
+                                                  required:
+                                                    - location
+                                                    - type
+                                              - contains:
+                                                  type: object
+                                                  properties:
+                                                    location:
+                                                      type: object
+                                                      properties:
+                                                        gps:
+                                                          type: string
+                                                      required:
+                                                        - gps
+                                                    type:
+                                                      const: END
+                                                  required:
+                                                    - location
+                                                    - type
+                                        required:
+                                          - stops
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      minItems: 1
+                                      items:
+                                        type: object
+                                        properties:
+                                          vehicle:
+                                            properties:
+                                              category:
+                                                type: string
+                                                enum:
+                                                  - AUTO_RICKSHAW
+                                                  - CAB
+                                            required:
+                                              - category
+                                        required:
+                                          - vehicle
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/6'
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                fulfillments:
+                                  type: array
+                                  items:
+                                    allOf:
+                                      - not:
+                                          required:
+                                            - agent
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
             examples:
               Return a quote offered by a public transit service provider:
                 value:
@@ -2458,8 +4027,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_init:
     post:
-      operationId: on_init
       description: Send order object with payment details updated
+      operationId: on_init
       requestBody:
         content:
           application/json:
@@ -2469,10 +4038,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - on_init
                     error:
                       $ref: '#/components/schemas/Error'
                     message:
@@ -2487,6 +4052,14 @@ paths:
                     - context
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_init
                     - properties:
                         message:
                           properties:
@@ -2497,18 +4070,11 @@ paths:
                                   properties:
                                     id:
                                       type: string
-                                    descriptor:
-                                      type: object
-                                      properties:
-                                        name:
-                                          type: string
-                                      required:
-                                        - name
                                   required:
                                     - id
-                                    - descriptor
                               required:
                                 - provider
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
                     - properties:
                         message:
                           properties:
@@ -2516,68 +4082,177 @@ paths:
                               properties:
                                 items:
                                   type: array
+                                  minItems: 1
                                   items:
                                     type: object
                                     properties:
-                                      id:
-                                        type: string
-                                      price:
-                                        type: number
-                                      descriptor:
-                                        type: object
-                                        properties:
-                                          name:
-                                            type: string
-                                        required:
-                                          - name
+                                      fulfillment_ids:
+                                        minItems: 1
+                                      location_ids:
+                                        minItems: 1
                                     required:
-                                      - id
-                                      - price
-                                      - descriptor
-                              required:
-                                - items
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                                      - fulfillment_ids
+                                      - location_ids
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
                     - properties:
                         message:
                           properties:
                             order:
                               properties:
-                                quote:
-                                  type: object
+                                fulfillments:
+                                  type: array
+                                  minItems: 1
+                                  items:
+                                    type: object
+                                    properties:
+                                      type:
+                                        type: string
+                                        enum:
+                                          - DELIVERY
+                                    required:
+                                      - type
+                    - allOf:
+                        - properties:
+                            message:
+                              properties:
+                                order:
                                   properties:
-                                    price:
+                                    quote:
                                       type: object
                                       properties:
-                                        currency:
-                                          type: string
-                                        value:
-                                          type: number
+                                        price:
+                                          type: object
+                                          properties:
+                                            currency:
+                                              type: string
+                                            value:
+                                              type: string
+                                              pattern: '^\d+(\.\d{1,2})?$'
+                                          required:
+                                            - currency
+                                            - value
+                                        breakup:
+                                          type: array
+                                          items:
+                                            type: object
+                                            properties:
+                                              price:
+                                                type: object
+                                                properties:
+                                                  currency:
+                                                    type: string
+                                                  value:
+                                                    type: string
+                                                    pattern: '^\d+(\.\d{1,2})?$'
+                                                required:
+                                                  - currency
+                                                  - value
+                                              title:
+                                                type: string
+                                                enum:
+                                                  - BASE_FARE
+                                                  - DISTANCE_FARE
+                                                  - TAX
+                                                  - DISCOUNT
+                                                  - WAITING_CHARGE
+                                            required:
+                                              - price
+                                              - title
                                       required:
-                                        - currency
-                                        - value
-                                    breakup:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          price:
-                                            type: number
-                                          title:
-                                            type: string
-                                            enum:
-                                              - BASE FARE
-                                              - TAX
-                                              - DISCOUNT
-                                              - WAITING CHARGE
-                                        required:
-                                          - price
-                                          - title
+                                        - price
+                                        - breakup
                                   required:
-                                    - price
-                                    - breakup
+                                    - quote
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    quote:
+                                      properties:
+                                        breakup:
+                                          allOf:
+                                            - contains:
+                                                type: object
+                                                properties:
+                                                  title:
+                                                    const: BASE_FARE
+                                                  price:
+                                                    type: object
+                                                    properties:
+                                                      value:
+                                                        type: string
+                                                    required:
+                                                      - value
+                                                required:
+                                                  - title
+                                                  - price
+                                            - contains:
+                                                type: object
+                                                properties:
+                                                  title:
+                                                    const: DISTANCE_FARE
+                                                  price:
+                                                    type: object
+                                                    properties:
+                                                      value:
+                                                        type: string
+                                                    required:
+                                                      - value
+                                                required:
+                                                  - title
+                                                  - price
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                cancellation_terms:
+                                  items:
+                                    properties:
+                                      fulfillment_state:
+                                        properties:
+                                          descriptor:
+                                            properties:
+                                              code:
+                                                type: string
+                                                enum:
+                                                  - RIDE_ASSIGNED
+                                                  - RIDE_ENROUTE_PICKUP
+                                                  - RIDE_ARRIVED_PICKUP
+                                                  - RIDE_STARTED
+                                            required:
+                                              - code
+                                      cancellation_fee:
+                                        oneOf:
+                                          - properties:
+                                              percentage:
+                                                type: string
+                                                pattern: '^(100(\.0{1,2})?|(\d{1,2})(\.\d{1,2})?)$'
+                                            required:
+                                              - percentage
+                                          - properties:
+                                              amount:
+                                                properties:
+                                                  value:
+                                                    type: string
+                                                    pattern: '^[+-]?(\d+(\.\d*)?|\.\d+)$'
+                                                required:
+                                                  - currency
+                                                  - value
+                                            required:
+                                              - amount
+                                    required:
+                                      - fulfillment_state
+                                      - cancellation_fee
                               required:
-                                - quote
-                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                                - cancellation_terms
+                    - properties:
+                        message:
+                          type: object
+                      required:
+                        - message
             examples:
               Return draft order for transit ticket with T+1 settlment via bank transfer:
                 value:
@@ -2972,8 +4647,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_confirm:
     post:
-      operationId: on_confirm
       description: Send active order object
+      operationId: on_confirm
       requestBody:
         content:
           application/json:
@@ -2984,10 +4659,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - on_confirm
                     error:
                       $ref: '#/components/schemas/Error'
                     message:
@@ -3001,88 +4672,52 @@ paths:
                     - context
                     - message
                 - allOf:
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
-                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_confirm
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/6'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
                     - properties:
                         message:
                           properties:
                             order:
                               properties:
-                                fulfillment:
-                                  type: object
-                                  properties:
-                                    agent:
-                                      type: object
-                                      properties:
-                                        contact:
-                                          type: object
-                                        person:
-                                          type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    customer:
-                                      type: object
-                                      properties:
-                                        contact:
-                                          type: object
-                                        person:
-                                          type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    state:
-                                      type: object
-                                      properties:
-                                        descriptor:
-                                          type: object
-                                          properties:
-                                            code:
-                                              type: string
-                                          required:
-                                            - code
-                                      required:
-                                        - descriptor
-                                    vehicle:
-                                      type: object
-                                      properties:
-                                        registration:
-                                          type: string
-                                      required:
-                                        - registration
-                                  required:
-                                    - agent
-                                    - customer
-                                    - state
-                                    - vehicle
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                    params:
-                                      type: object
-                                      properties:
-                                        transaction_id:
-                                          type: string
-                                  required:
-                                    - type
-                                  allOf:
-                                    - if:
-                                        properties:
-                                          type:
-                                            const: PRE-ORDER
-                                      then:
-                                        properties:
-                                          params:
-                                            required:
-                                              - transaction_id
+                                status:
+                                  type: string
+                                  enum:
+                                    - COMPLETE
+                                    - ACTIVE
                               required:
-                                - fulfillment
-                                - payment
+                                - status
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/9'
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                status:
+                                  type: string
+                                  enum:
+                                    - COMPLETE
+                                    - ACTIVE
+                                    - CANCELLED
+                                    - SOFT_CANCEL
+                              required:
+                                - status
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/10'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/12'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/11'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/13'
             examples:
               Return confirmed order with latest fulfillment details:
                 value:
@@ -3500,8 +5135,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_status:
     post:
-      operationId: on_status
       description: Fetch the status of a Service
+      operationId: on_status
       requestBody:
         content:
           application/json:
@@ -3511,10 +5146,6 @@ paths:
                     context:
                       allOf:
                         - $ref: '#/components/schemas/Context'
-                        - properties:
-                            action:
-                              enum:
-                                - on_status
                     error:
                       $ref: '#/components/schemas/Error'
                     message:
@@ -3528,88 +5159,116 @@ paths:
                     - context
                   type: object
                 - allOf:
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
-                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_status
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - allOf:
+                        - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
+                        - properties:
+                            message:
+                              properties:
+                                order:
+                                  properties:
+                                    fulfillments:
+                                      type: array
+                                      items:
+                                        allOf:
+                                          - properties:
+                                              agent:
+                                                properties:
+                                                  contact:
+                                                    properties:
+                                                      phone:
+                                                        type: string
+                                                        pattern: '^\+?[1-9]\d{1,14}$'
+                                                    required:
+                                                      - phone
+                                                  person:
+                                                    properties:
+                                                      name:
+                                                        type: string
+                                                    required:
+                                                      - name
+                                                required:
+                                                  - contact
+                                                  - person
+                                            required:
+                                              - agent
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/6'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/9'
                     - properties:
                         message:
                           properties:
                             order:
                               properties:
-                                fulfillment:
-                                  type: object
-                                  properties:
-                                    agent:
-                                      type: object
-                                      properties:
-                                        contact:
-                                          type: object
-                                        person:
-                                          type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    customer:
-                                      type: object
-                                      properties:
-                                        contact:
-                                          type: object
-                                        person:
-                                          type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    state:
-                                      type: object
-                                      properties:
-                                        descriptor:
-                                          type: object
+                                payments:
+                                  type: array
+                                  items:
+                                    properties:
+                                      type:
+                                        type: string
+                                      params:
+                                        type: object
+                                        properties:
+                                          transaction_id:
+                                            type: string
+                                    required:
+                                      - type
+                                    allOf:
+                                      - if:
                                           properties:
-                                            code:
-                                              type: string
-                                          required:
-                                            - code
-                                      required:
-                                        - descriptor
-                                    vehicle:
-                                      type: object
-                                      properties:
-                                        registration:
-                                          type: string
-                                      required:
-                                        - registration
-                                  required:
-                                    - agent
-                                    - customer
-                                    - state
-                                    - vehicle
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                    params:
-                                      type: object
-                                      properties:
-                                        transaction_id:
-                                          type: string
-                                  required:
-                                    - type
-                                  allOf:
-                                    - if:
+                                            type:
+                                              const: PRE-ORDER
+                                        then:
+                                          properties:
+                                            params:
+                                              required:
+                                                - transaction_id
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                fulfillments:
+                                  type: array
+                                  items:
+                                    properties:
+                                      vehicle:
+                                        type: object
                                         properties:
-                                          type:
-                                            const: PRE-ORDER
-                                      then:
-                                        properties:
-                                          params:
-                                            required:
-                                              - transaction_id
+                                          registration:
+                                            type: string
+                                        required:
+                                          - registration
+                                          - make
+                                          - model
+                                    required:
+                                      - vehicle
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                fulfillments:
+                                  items:
+                                    required:
+                                      - state
+                    - properties:
+                        message:
+                          properties:
+                            order:
                               required:
-                                - fulfillment
-                                - payment
+                                - id
             examples:
               Return order with latest fulfillment status - Driver en-route to pickup:
                 value:
@@ -4600,8 +6259,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_update:
     post:
-      operationId: on_update
       description: Returns updated service with updated runtime object
+      operationId: on_update
       requestBody:
         content:
           application/json:
@@ -4629,83 +6288,26 @@ paths:
                     - context
                   type: object
                 - allOf:
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
-                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
                     - properties:
-                        message:
+                        context:
                           properties:
-                            order:
-                              properties:
-                                fulfillment:
-                                  type: object
-                                  properties:
-                                    agent:
-                                      type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    customer:
-                                      type: object
-                                      properties:
-                                        contact:
-                                          type: object
-                                        person:
-                                          type: object
-                                      required:
-                                        - contact
-                                        - person
-                                    state:
-                                      type: object
-                                      properties:
-                                        descriptor:
-                                          type: object
-                                          properties:
-                                            code:
-                                              type: string
-                                          required:
-                                            - code
-                                      required:
-                                        - descriptor
-                                    vehicle:
-                                      type: object
-                                      properties:
-                                        registration:
-                                          type: string
-                                      required:
-                                        - registration
-                                  required:
-                                    - agent
-                                    - customer
-                                    - state
-                                    - vehicle
-                                payment:
-                                  type: object
-                                  properties:
-                                    type:
-                                      type: string
-                                    params:
-                                      type: object
-                                      properties:
-                                        transaction_id:
-                                          type: string
-                                  required:
-                                    - type
-                                  allOf:
-                                    - if:
-                                        properties:
-                                          type:
-                                            const: PRE-ORDER
-                                      then:
-                                        properties:
-                                          params:
-                                            required:
-                                              - transaction_id
-                              required:
-                                - fulfillment
-                                - payment
+                            action:
+                              type: string
+                              enum:
+                                - on_update
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/6'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/9'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/10'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/11'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/12'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/13'
             examples:
               Return updated order with payment transaction status:
                 value:
@@ -5061,8 +6663,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_rating:
     post:
-      operationId: on_rating
       description: Provide feedback on a service
+      operationId: on_rating
       requestBody:
         content:
           application/json:
@@ -5090,6 +6692,14 @@ paths:
                     - message
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_rating
                     - properties:
                         message:
                           properties:
@@ -5158,8 +6768,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_support:
     post:
-      operationId: on_support
       description: Contact Support
+      operationId: on_support
       requestBody:
         content:
           application/json:
@@ -5184,6 +6794,14 @@ paths:
                     - context
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_support
                     - properties:
                         message:
                           properties:
@@ -5254,8 +6872,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_track:
     post:
-      operationId: on_track
       description: Send tracking details of an active order
+      operationId: on_track
       requestBody:
         content:
           application/json:
@@ -5282,6 +6900,14 @@ paths:
                     - context
                   type: object
                 - allOf:
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_track
                     - properties:
                         message:
                           properties:
@@ -5352,8 +6978,8 @@ paths:
         - Beckn App Platform (BAP)
   /on_cancel:
     post:
-      operationId: on_cancel
       description: Send cancellation request_id with reasons list in case of cancellation request. Else send cancelled order object
+      operationId: on_cancel
       requestBody:
         content:
           application/json:
@@ -5381,51 +7007,49 @@ paths:
                     - context
                   type: object
                 - allOf:
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/1'
-                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
-                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/3'
-                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1init/post/requestBody/content/application~1json/schema/allOf/1/allOf/0'
+                    - properties:
+                        context:
+                          properties:
+                            action:
+                              type: string
+                              enum:
+                                - on_cancel
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/2'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/4'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/6'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/7'
+                    - $ref: '#/paths/~1confirm/post/requestBody/content/application~1json/schema/allOf/1/allOf/5'
+                    - $ref: '#/paths/~1on_init/post/requestBody/content/application~1json/schema/allOf/1/allOf/9'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/10'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/11'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/12'
+                    - $ref: '#/paths/~1on_status/post/requestBody/content/application~1json/schema/allOf/1/allOf/13'
                     - properties:
                         message:
                           properties:
                             order:
-                              type: object
                               properties:
-                                cancellation:
-                                  type: object
-                                  properties:
-                                    cancelled_by:
-                                      type: string
-                                      enum:
-                                        - CONSUMER
-                                        - PROVIDER
-                                    time:
-                                      type: string
-                                      format: date-time
-                                  required:
-                                    - cancelled_by
-                                    - time
-                                fulfillments:
-                                  type: array
-                                  items:
-                                    type: object
-                                    properties:
-                                      state:
-                                        type: object
-                                        properties:
-                                          descriptor:
-                                            type: object
-                                            properties:
-                                              code:
-                                                type: string
-                                                enum:
-                                                  - RIDE_CANCELLED
-                                            required:
-                                              - code
+                                status:
+                                  type: string
+                                  enum:
+                                    - CANCELLED
+                                    - SOFT_CANCEL
                               required:
-                                - cancellation
-                                - fulfillments
+                                - status
+                    - properties:
+                        message:
+                          properties:
+                            order:
+                              properties:
+                                cancellation_terms:
+                                  items:
+                                    required:
+                                      - reason_required
+                              required:
+                                - cancellation_terms
             examples:
               Return cancelled ticket order with cancellation charges:
                 value:
@@ -6024,7 +7648,6 @@ components:
         xinput:
           $ref: '#/components/schemas/XInput'
       required:
-        - cancel_by
         - cancellation_fee
       type: object
     Catalog:
@@ -6169,14 +7792,6 @@ components:
         version:
           description: Version of transaction protocol being used by the sender.
           type: string
-      required:
-        - action
-        - domain
-        - version
-        - bap_id
-        - bap_uri
-        - transaction_id
-        - message_id
       type: object
     Country:
       additionalProperties: false
@@ -6214,7 +7829,7 @@ components:
       type: object
     DecimalValue:
       description: Describes a decimal value
-      pattern: '[+-]?([0-9]*[.])?[0-9]+'
+      pattern: '^[+-]?([0-9]*[.])?[0-9]+'
       type: string
     Descriptor:
       additionalProperties: false
@@ -6258,8 +7873,6 @@ components:
           description: A url that contains addtional information about that domain.
         code:
           description: 'Standard code representing the domain. The standard is usually published as part of the network policy. Furthermore, the network facilitator should also provide a mechanism to provide the supported domains of a network.'
-          enum:
-            - 'mobility:ondemandride'
           type: string
         name:
           description: Name of the domain
@@ -6383,7 +7996,7 @@ components:
       type: object
     Gps:
       description: Describes a gps coordinate
-      pattern: '^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$'
+      pattern: '^[-+]?([1-8]?\d(\.\d{6,})?|90(\.0{6,})?),\s*[-+]?(180(\.0{6,})?|((1[0-7]\d)|([1-9]?\d))(\.\d{6,})?)$'
       type: string
     Image:
       additionalProperties: false
@@ -6819,10 +8432,6 @@ components:
           type: array
         status:
           description: Status of the order. Allowed values can be defined by the network policy
-          enum:
-            - ACTIVE
-            - COMPLETE
-            - CANCELLED
           type: string
         tags:
           items:
