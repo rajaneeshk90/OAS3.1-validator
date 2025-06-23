@@ -12,6 +12,7 @@ paths:
         - Beckn Provider Platform (BPP)
         - Beckn Gateway (BG)
       description: This allows the customer to search for energy service providers.
+      operationId: search
       requestBody:
         content:
           application/json:
@@ -102,6 +103,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: BAP selects a provider and their energy service.
+      operationId: select
       requestBody:
         content:
           application/json:
@@ -191,6 +193,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Initialize an order by providing billing and/or shipping details to the energy service provider
+      operationId: init
       requestBody:
         content:
           application/json:
@@ -289,6 +292,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Confirms the order, completes the payment and waits for order confirmation.
+      operationId: confirm
       requestBody:
         content:
           application/json:
@@ -411,6 +415,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Fetch the latest order object status
+      operationId: status
       requestBody:
         content:
           application/json:
@@ -487,6 +492,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Cancel an order
+      operationId: cancel
       requestBody:
         content:
           application/json:
@@ -571,6 +577,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Update a criteria of the order
+      operationId: update
       requestBody:
         content:
           application/json:
@@ -687,6 +694,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Provide feedback on a service
+      operationId: rating
       requestBody:
         content:
           application/json:
@@ -766,6 +774,7 @@ paths:
       tags:
         - Beckn Provider Platform (BPP)
       description: Contact support
+      operationId: support
       requestBody:
         content:
           application/json:
@@ -844,6 +853,7 @@ paths:
         - Beckn Application Platform (BAP)
         - Beckn Gateway (BG)
       description: The BPP sends its energy catalog in response to a search request.
+      operationId: on_search
       requestBody:
         content:
           application/json:
@@ -1063,6 +1073,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Send details along with quoted price for selected items
+      operationId: on_select
       requestBody:
         content:
           application/json:
@@ -1222,6 +1233,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Send draft order object with payment details updated for the service.
+      operationId: on_init
       requestBody:
         content:
           application/json:
@@ -1404,6 +1416,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Send active order object with the confirmed order ID
+      operationId: on_confirm
       requestBody:
         content:
           application/json:
@@ -1600,6 +1613,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Sends cancelled order object with the reason.
+      operationId: on_cancel
       requestBody:
         content:
           application/json:
@@ -1911,6 +1925,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Returns updated service with updated runtime object
+      operationId: on_update
       requestBody:
         content:
           application/json:
@@ -2236,6 +2251,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Fetch the status of a service
+      operationId: on_status
       requestBody:
         content:
           application/json:
@@ -2427,6 +2443,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Provide feedback on a service
+      operationId: on_rating
       requestBody:
         content:
           application/json:
@@ -2508,6 +2525,7 @@ paths:
       tags:
         - Beckn Application Platform (BAP)
       description: Contact Support
+      operationId: on_support
       requestBody:
         content:
           application/json:
