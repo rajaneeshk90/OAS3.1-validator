@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oas31-validator
+  namespace: beckn-spec
+  labels:
+    app: oas31-validator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oas31-validator
+  template:
+    metadata:
+      labels:
+        app: oas31-validator
+    spec:
+      containers:
+      - name: oas31-validator
+        image: asia-south1-docker.pkg.dev/gen-lang-client-0091398941/oas-validator/oas31-validator:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5 
