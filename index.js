@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const retailApi = require('./controllers/retail');
 const mobilityApi = require('./controllers/mobility');
+const evApi = require('./controllers/ev');
 
 // Initialize retail OpenAPI Backend
 const apiBackendRetail = new OpenAPIBackend({
@@ -65,9 +66,40 @@ const apiBackendMobility = new OpenAPIBackend({
   quick:true,
 });
 
+// Initialize EV OpenAPI Backend
+const apiBackendEv = new OpenAPIBackend({
+  definition: path.join(__dirname, 'api', 'Ev.yaml'),
+  handlers: {
+    search: evApi.search,
+    select: evApi.select,
+    init: evApi.init,
+    confirm: evApi.confirm,
+    status: evApi.status,
+    track: evApi.track,
+    cancel: evApi.cancel,
+    update: evApi.update,
+    rating: evApi.rating,
+    support: evApi.support,
+    on_search: evApi.on_search,
+    on_select: evApi.on_select,
+    on_init: evApi.on_init,
+    on_confirm: evApi.on_confirm,
+    on_status: evApi.on_status,
+    on_track: evApi.on_track,
+    on_cancel: evApi.on_cancel,
+    on_update: evApi.on_update,
+    on_rating: evApi.on_rating,
+    on_support: evApi.on_support,
+    notFound: (c, req, res) => res.status(404).json({ error: 'Not Found' }),
+    validationFail: (c, req, res) => res.status(400).json({ error: c.validation.errors }),
+  },
+  quick:true,
+});
+
 // Initialize the backends
 apiBackendRetail.init();
 apiBackendMobility.init();
+apiBackendEv.init();
 
 // Create Express app
 const app = express();
@@ -82,6 +114,9 @@ app.use('/retail', (req, res, next) => {
 });
 app.use('/mobility', (req, res, next) => {
   apiBackendMobility.handleRequest(req, req, res).catch(next);
+});
+app.use('/ev', (req, res, next) => {
+  apiBackendEv.handleRequest(req, req, res).catch(next);
 });
 
 // Start server
